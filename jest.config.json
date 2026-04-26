@@ -1,0 +1,15 @@
+{
+  "testEnvironment": "node",
+  "testMatch": ["**/tests/**/*.test.js"],
+  "forceExit": true,
+  "clearMocks": true,
+  "verbose": true,
+  "collectCoverageFrom": [
+    "src/**/*.js",
+    "!src/database/seed.js",
+    "!src/database/migrate.js",
+    "!src/server.js"
+  ],
+  "coverageDirectory": "coverage",
+  "coverageReporters": ["text", "lcov", "html"]
+}
