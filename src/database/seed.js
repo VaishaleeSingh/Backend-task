@@ -21,7 +21,10 @@ const seedData = async () => {
     await sequelize.sync({ alter: true });
 
     // Clean existing data (order matters for FK constraints)
+    const { ContentSlot, ContentSchedule } = require('../models/index');
     await AuditLog.destroy({ where: {}, force: true });
+    await ContentSchedule.destroy({ where: {}, force: true });
+    await ContentSlot.destroy({ where: {}, force: true });
     await Content.destroy({ where: {}, force: true });
     await User.destroy({ where: {}, force: true });
 
@@ -179,6 +182,35 @@ const seedData = async () => {
     ]);
 
     console.log('📋 Audit logs seeded.');
+
+    // ─── Create Scheduling Rotation Data ──────────────────────────────────────
+
+    // Create a Maths slot for Teacher 1
+    const mathsSlot = await ContentSlot.create({
+      subject: 'Maths',
+      teacher_id: teacher1.id
+    });
+
+    // Add 3 contents to Maths rotation (5 mins each)
+    await ContentSchedule.bulkCreate([
+      { content_id: liveContent1.id, slot_id: mathsSlot.id, rotation_order: 1, duration: 5 },
+      { content_id: pendingContent1.id, slot_id: mathsSlot.id, rotation_order: 2, duration: 5 } // Assuming this was approved
+    ]);
+
+    // Create a Science slot for Teacher 2
+    const scienceSlot = await ContentSlot.create({
+      subject: 'Science',
+      teacher_id: teacher2.id
+    });
+
+    await ContentSchedule.create({
+      content_id: liveContent2.id,
+      slot_id: scienceSlot.id,
+      rotation_order: 1,
+      duration: 5
+    });
+
+    console.log('⏰ Scheduling rotation data seeded (Maths & Science slots).');
 
     console.log('\n✅ Seed complete! Test credentials:');
     console.log('─────────────────────────────────────────────────');

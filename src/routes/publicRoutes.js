@@ -29,4 +29,16 @@ router.get(
   publicController.getLiveContentById
 );
 
+/**
+ * @route   GET /api/public/live/:teacherId
+ * @desc    Get current active content in rotation for a teacher
+ * @access  Public
+ */
+router.get(
+  '/live/:teacherId',
+  [param('teacherId').isUUID().withMessage('Teacher ID must be a valid UUID.')],
+  validate,
+  publicController.getTeacherLiveContent
+);
+
 module.exports = router;

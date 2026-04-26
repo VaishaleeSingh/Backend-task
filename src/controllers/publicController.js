@@ -40,6 +40,27 @@ class PublicController {
     } catch (error) {
       next(error);
     }
+  /**
+   * GET /api/public/live/:teacherId - Get live rotating content for a specific teacher
+   */
+  async getTeacherLiveContent(req, res, next) {
+    try {
+      const liveContent = await contentService.getLiveContentForTeacher(req.params.teacherId);
+      
+      if (!liveContent || liveContent.length === 0) {
+        return successResponse(res, {
+          message: 'No content available',
+          data: []
+        });
+      }
+
+      return successResponse(res, {
+        message: 'Live rotating content retrieved successfully.',
+        data: liveContent,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 

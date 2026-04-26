@@ -513,6 +513,83 @@ class ContentService {
       totalTeachers: parseInt(teacherCount[0].count),
       topViewedContent: topContent,
     };
+  /**
+   * Public: get live content for a specific teacher with rotation logic.
+   * "Each subject has its own broadcast rotation" - Requirement
+   */
+  async getLiveContentForTeacher(teacherId) {
+    const { ContentSchedule, ContentSlot } = require('../models');
+
+    // 1. Get all active slots for this teacher
+    const slots = await ContentSlot.findAll({
+      where: { teacher_id: teacherId },
+      include: [
+        {
+          model: ContentSchedule,
+          include: [
+            {
+              model: Content,
+              where: { status: 'live' },
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!slots || slots.length === 0) {
+      return [];
+    }
+
+    const liveContent = [];
+    const nowMinutes = Math.floor(Date.now() / 60000);
+
+    for (const slot of slots) {
+      const schedules = slot.ContentSchedules || [];
+      if (schedules.length === 0) continue;
+
+      // Sort by rotation order
+      const sortedSchedules = schedules.sort((a, b) => a.rotation_order - b.rotation_order);
+
+      // Calculate total duration for this subject's cycle
+      const totalDuration = sortedSchedules.reduce((acc, s) => acc + s.duration, 0);
+
+      if (totalDuration === 0) continue;
+
+      // Determine where we are in the cycle
+      const currentMinuteInCycle = nowMinutes % totalDuration;
+
+      // Find the active content based on the accumulated duration
+      let accumulatedTime = 0;
+      let activeSchedule = null;
+
+      for (const schedule of sortedSchedules) {
+        accumulatedTime += schedule.duration;
+        if (currentMinuteInCycle < accumulatedTime) {
+          activeSchedule = schedule;
+          break;
+        }
+      }
+
+      if (activeSchedule && activeSchedule.Content) {
+        liveContent.push({
+          subject: slot.subject,
+          activeContent: {
+            id: activeSchedule.Content.id,
+            title: activeSchedule.Content.title,
+            description: activeSchedule.Content.description,
+            fileUrl: activeSchedule.Content.content_url,
+            contentType: activeSchedule.Content.content_type,
+          },
+          rotationInfo: {
+            duration: activeSchedule.duration,
+            order: activeSchedule.rotation_order,
+            totalCycleTime: totalDuration
+          }
+        });
+      }
+    }
+
+    return liveContent;
   }
 }
 

@@ -1,4 +1,5 @@
 'use strict';
+console.log('--- Migration Script Entry ---');
 
 /**
  * Database Migration Script
@@ -26,6 +27,8 @@ async function migrate() {
     console.log('  - users');
     console.log('  - contents');
     console.log('  - audit_logs');
+    console.log('  - content_slots');
+    console.log('  - content_schedules');
 
     process.exit(0);
   } catch (error) {

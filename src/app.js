@@ -97,6 +97,9 @@ app.use('/api/principal', principalRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/public', publicRoutes);
 
+// Specific alias to match assignment requirement exactly (e.g. /content/live/:teacherId)
+app.use('/content', publicRoutes);
+
 // ─── Error Handling ─────────────────────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);

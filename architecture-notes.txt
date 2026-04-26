@@ -1,0 +1,76 @@
+CONTENT BROADCASTING SYSTEM - ARCHITECTURE NOTES
+================================================
+
+1. Authentication & RBAC Flow
+-----------------------------
+- Implementation: JWT (JSON Web Tokens) with Access and Refresh tokens.
+- Flow: 
+  - User logs in -> Server issues short-lived Access Token (15m) and long-lived Refresh Token (7d).
+  - Refresh Token is stored in the database for session invalidation (logout).
+  - RBAC is enforced via custom middleware `authorize('principal')` or `authorize('teacher')`.
+  - Passwords hashed using bcrypt (12 rounds).
+
+2. Subject-Based System Design
+------------------------------
+- Each Content item is assigned a mandatory `subject` (Maths, Science, etc.).
+- Content is grouped by Subject at the database level using `ContentSlot` entities.
+- This allows independent management of broadcast streams for different subjects.
+
+3. Upload Handling Approach
+---------------------------
+- Middleware: Multer for handling multipart/form-data.
+- Validation: 
+  - File format restricted to JPG, PNG, GIF.
+  - File size capped at 10MB.
+- Storage: Local filesystem storage in `uploads/` folder (standard) with a path stored in the database.
+
+4. Approval Workflow Design
+---------------------------
+- Lifecycle: draft -> pending_approval -> approved/rejected -> live -> taken_down.
+- Teachers can only submit 'draft' or 'rejected' content.
+- Principals review 'pending_approval' content.
+- Rejection requires a mandatory reason stored in `rejection_reason`.
+
+5. Scheduling/Rotation Logic
+----------------------------
+- Logic: Time-based deterministic rotation.
+- Table: `content_schedules` stores `duration` (minutes) and `rotation_order`.
+- Calculation: 
+  - Total cycle time = SUM(all durations in a subject).
+  - currentMinuteInCycle = currentMinutesSinceEpoch % totalCycleTime.
+  - The system iterates through the sorted rotation order to find the item matching the current time slice.
+- Advantage: No database writes needed for rotation; it's calculated on-the-fly based on server time.
+
+6. Database Design Decisions
+----------------------------
+- ORM: Sequelize with MySQL.
+- Soft Deletes: Paranoid mode enabled for all critical tables.
+- Relationships: 
+  - User (Teacher) -> Content (1:M)
+  - Content -> ContentSchedule (1:M)
+  - ContentSlot (Subject) -> ContentSchedule (1:M)
+- Audit Logging: Immutable `audit_logs` table records every critical state change for accountability.
+
+7. Folder Structure
+-------------------
+- src/controllers: Request handling and response coordination.
+- src/services: Core business logic (Scheduling, Auth, Content lifecycle).
+- src/models: Database schemas and associations.
+- src/routes: API endpoint definitions and validation chains.
+- src/middleware: Auth, RBAC, Error handling, and Request validation.
+- src/utils: Helper modules (Logger, JWT helper, Response standardized).
+
+8. Middleware Usage
+-------------------
+- Global: Helmet (Security), CORS, Rate Limiter (Protection).
+- Request Specific: express-validator for strict input checking.
+- Custom: `authenticate` (JWT check) and `authorize` (Role check).
+
+9. Scalability Approach
+-----------------------
+- Caching: Rate limiting and static asset serving optimizations.
+- Database: Indexed foreign keys (teacher_id, status, subject) for fast lookups.
+- Future: 
+  - Redis for caching the `/content/live` rotation calculations.
+  - S3 for cloud storage to handle higher upload volumes.
+  - Message Queue (BullMQ) if scheduled tasks (take downs) grow significantly.
