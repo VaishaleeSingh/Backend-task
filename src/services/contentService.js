@@ -513,6 +513,8 @@ class ContentService {
       totalTeachers: parseInt(teacherCount[0].count),
       topViewedContent: topContent,
     };
+  }
+
   /**
    * Public: get live content for a specific teacher with rotation logic.
    * "Each subject has its own broadcast rotation" - Requirement

@@ -40,6 +40,8 @@ class PublicController {
     } catch (error) {
       next(error);
     }
+  }
+
   /**
    * GET /api/public/live/:teacherId - Get live rotating content for a specific teacher
    */
