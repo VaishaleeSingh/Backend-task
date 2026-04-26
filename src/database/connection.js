@@ -4,11 +4,11 @@ const { Sequelize } = require('sequelize');
 const logger = require('../utils/logger');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'content_broadcasting_db',
-  process.env.DB_USER || 'root',
-  process.env.DB_PASSWORD || '',
+  (process.env.DB_NAME || 'content_broadcasting_db').trim(),
+  (process.env.DB_USER || 'root').trim(),
+  (process.env.DB_PASSWORD || '').trim(),
   {
-    host: process.env.DB_HOST || 'localhost',
+    host: (process.env.DB_HOST || 'localhost').trim(),
     port: parseInt(process.env.DB_PORT) || 3306,
     dialect: 'mysql',
     dialectOptions: {
