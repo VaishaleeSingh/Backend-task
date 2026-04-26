@@ -80,7 +80,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ─── API Routes ─────────────────────────────────────────────────────────────
+// ─── Routes ─────────────────────────────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Welcome to the Content Broadcasting System API',
+    version: '1.0.0',
+    docs: '/api/public/content',
+    health: '/api/health'
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/principal', principalRoutes);
